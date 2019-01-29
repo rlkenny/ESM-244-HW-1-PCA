@@ -1,0 +1,115 @@
+---
+title: "244 Homework 1"
+author: "Rachel Kenny"
+date: "January 26, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Task 1
+
+####Load libraries and data
+```{r load, message = FALSE}
+
+library(ggplot2)
+library(RColorBrewer)
+library(tidyverse)
+library(stringr)
+library(dplyr)
+library(readr)
+
+agencies <- read.csv("agencies.csv")
+launches <- read.csv("launches.csv")
+
+View(agencies)
+View(launches)
+
+```
+
+####Explore data
+```{r explore, message = FALSE, eval = FALSE}
+
+ggplot(launches, aes(x=agency))+
+  geom_histogram(stat="count")+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust = .5))
+
+ggplot(launches, aes(x=launch_year))+
+  geom_histogram(stat="count")+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust = .5))
+
+```
+
+####Subset data
+```{r subset, message = FALSE}
+#subset to only succesful China, Russia, and US launches after 2000
+launches_subset <- filter(launches, agency == "RU" | agency =="US" | agency =="CN", launch_year >= "2000", category == "O")
+
+#View(launches_subset)
+```
+
+####Graph data
+```{r ggplot, message = FALSE, results = TRUE}
+#Create ggplot showing launches for three countries since 2000
+ggplot(launches_subset, aes(x=launch_year, fill = agency))+
+  geom_bar(stat = "count", position = "stack")+
+  theme_classic()+
+  xlab("Year")+
+  ylab("Count of Successful Launches")+
+  ggtitle("Successful Space Launches from China, Russia, and the U.S. in the 21st Century")+
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11), legend.title=element_text(face="bold", size = 10), axis.title=element_text(face="bold", size = 10))+
+  scale_fill_brewer(palette="Dark2", name="Agency", labels =c("China", "Russia", "U.S."))+ 
+  scale_x_continuous(expand = c(0.015, 0)) + scale_y_continuous(expand = c(0, 0))
+  
+
+```
+
+
+
+##Task 2
+
+####Load libraries and data
+```{r load_usda, message = FALSE}
+#Load libraries and data
+
+library(factoextra)
+library(ggsci) 
+
+usda <- read_csv("usda_nutrients.csv")
+#View(usda)
+
+```
+
+####Subset data
+```{r subset_raw, message = FALSE}
+
+raw <- filter(usda, FoodGroup == "Vegetables and Vegetable Products" | FoodGroup == "Fruits and Fruit Juices") %>% 
+  filter(str_detect(ShortDescrip, "RAW"))%>% 
+  arrange(FoodGroup)
+
+#View(raw)
+
+```
+
+####Create PCA
+```{r pca, message = FALSE}
+
+nutrients_pca <- prcomp(raw[9:30], scale = TRUE)
+summary(nutrients_pca) 
+
+#View(raw)
+
+fviz_pca_biplot(nutrients_pca, 
+                habillage = raw$FoodGroup, 
+                palette = c("#FC4E07", "#008000"), 
+                label = "var", repel = TRUE, 
+                title = "PCA Biplot of Fruit and Vegetable Nutrient Content",)+
+                theme_linedraw()+
+                theme(plot.title = element_text(face="bold", size=11), legend.title=element_text(face="bold", size = 10), axis.title=element_text(face="bold", size = 10))
+
+```
+
+Vitamin C is strongly negatively correlated with Protein. Vitamin B12 has very little correlation with Calcium. Zinc and Protein are strongly correlated. Fruits and fruit juices appear to be grouped differently from vegetable and vegetable products. Fruits tend to be more concentrated around sugars and vitamin C while vegetables are more concentrated on a high variety of nutrients, from protein and phosphourous to magnesium and iron.
+
